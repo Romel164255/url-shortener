@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 
 function App() {
   const [url, setUrl] = useState("");
   const [customAlias, setCustomAlias] = useState("");
   const [shortUrl, setShortUrl] = useState("");
+  const [qrCode, setQrCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -11,13 +13,12 @@ function App() {
     setLoading(true);
     setError("");
     setShortUrl("");
+    setQrCode("");
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/shorten`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url,
           customAlias: customAlias || undefined,
@@ -37,6 +38,19 @@ function App() {
       setLoading(false);
     }
   };
+
+  // Generate QR when shortUrl changes
+  useEffect(() => {
+    if (shortUrl) {
+      QRCode.toDataURL(shortUrl)
+        .then((url) => {
+          setQrCode(url);
+        })
+        .catch(() => {
+          setError("Failed to generate QR");
+        });
+    }
+  }, [shortUrl]);
 
   return (
     <div style={styles.container}>
@@ -69,12 +83,22 @@ function App() {
           <a href={shortUrl} target="_blank" rel="noreferrer">
             {shortUrl}
           </a>
+
           <button
             onClick={() => navigator.clipboard.writeText(shortUrl)}
             style={styles.copyButton}
           >
             Copy
           </button>
+
+          {qrCode && (
+            <div style={styles.qrContainer}>
+              <img src={qrCode} alt="QR Code" />
+              <a href={qrCode} download="qr-code.png">
+                Download QR
+              </a>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -106,8 +130,10 @@ const styles = {
     color: "red",
   },
   copyButton: {
-    marginLeft: "10px",
-    padding: "5px 10px",
+    marginTop: "10px",
+  },
+  qrContainer: {
+    marginTop: "20px",
   },
 };
 
