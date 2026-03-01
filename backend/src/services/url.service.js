@@ -1,0 +1,64 @@
+const pool = require("../config/db");
+const generateShortId = require("../utils/generateShortId");
+const { redisClient } = require("../config/redis");
+
+const createShortUrl = async (originalUrl) => {
+  // Check if URL already exists
+  const existing = await pool.query(
+    `SELECT * FROM urls WHERE original_url = $1`,
+    [originalUrl]
+  );
+
+  if (existing.rows.length > 0) {
+    return existing.rows[0];
+  }
+
+  const shortId = generateShortId();
+
+  const { rows } = await pool.query(
+    `INSERT INTO urls (original_url, short_id)
+     VALUES ($1, $2)
+     RETURNING *`,
+    [originalUrl, shortId]
+  );
+
+  return rows[0];
+};
+
+const getOriginalUrl = async (shortId) => {
+  // 1️⃣ Check Redis first
+  const cached = await redisClient.get(shortId);
+  if (cached) {
+    await pool.query(
+      `UPDATE urls SET clicks = clicks + 1 WHERE short_id = $1`,
+      [shortId]
+    );
+    return cached;
+  }
+
+  // 2️⃣ Check DB
+  const { rows } = await pool.query(
+    `SELECT * FROM urls WHERE short_id = $1`,
+    [shortId]
+  );
+
+  if (rows.length === 0) return null;
+
+  const originalUrl = rows[0].original_url;
+
+  // 3️⃣ Cache in Redis
+  await redisClient.set(shortId, originalUrl, { EX: 3600 });
+
+  // 4️⃣ Increment clicks
+  await pool.query(
+    `UPDATE urls SET clicks = clicks + 1 WHERE short_id = $1`,
+    [shortId]
+  );
+
+  return originalUrl;
+};
+
+module.exports = {
+  createShortUrl,
+  getOriginalUrl,
+};
