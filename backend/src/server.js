@@ -10,7 +10,7 @@ async function startServer() {
     await pool.query("SELECT NOW()");
     console.log("✅ PostgreSQL connected");
 
-    await connectRedis();
+    connectRedis(); // prevent redis to block and crash app->>await connectRedis();
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
