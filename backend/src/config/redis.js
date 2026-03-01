@@ -1,17 +1,33 @@
 const { createClient } = require("redis");
 
-const redisClient = createClient({
-  url: process.env.REDIS_URL,
-});
+let redisClient;
 
-redisClient.on("error", (err) => {
-  console.error("Redis Error:", err);
-});
+if (process.env.REDIS_URL) {
+  redisClient = createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      tls: true,
+      rejectUnauthorized: false,
+    },
+  });
+
+  redisClient.on("error", (err) => {
+    console.error("Redis Error:", err.message);
+  });
+} else {
+  console.log("⚠️ Redis not configured");
+}
 
 const connectRedis = async () => {
-  if (!redisClient.isOpen) {
-    await redisClient.connect();
-    console.log("✅ Redis connected");
+  if (!redisClient) return;
+
+  try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+      console.log("✅ Redis connected");
+    }
+  } catch (err) {
+    console.log("⚠️ Redis connection failed. Continuing without cache.");
   }
 };
 
