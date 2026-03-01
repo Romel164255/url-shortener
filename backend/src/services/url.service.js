@@ -1,3 +1,29 @@
+const pool = require("../config/db");
+const generateShortId = require("../utils/generateShortId");
+const { redisClient } = require("../config/redis");
+
+const createShortUrl = async (originalUrl) => {
+  const existing = await pool.query(
+    `SELECT * FROM urls WHERE original_url = $1`,
+    [originalUrl]
+  );
+
+  if (existing.rows.length > 0) {
+    return existing.rows[0];
+  }
+
+  const shortId = generateShortId();
+
+  const { rows } = await pool.query(
+    `INSERT INTO urls (original_url, short_id)
+     VALUES ($1, $2)
+     RETURNING *`,
+    [originalUrl, shortId]
+  );
+
+  return rows[0];
+};
+
 const getOriginalUrl = async (shortId) => {
   let cached = null;
 
@@ -36,4 +62,9 @@ const getOriginalUrl = async (shortId) => {
   );
 
   return originalUrl;
+};
+
+module.exports = {
+  createShortUrl,
+  getOriginalUrl,
 };
