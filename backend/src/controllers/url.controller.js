@@ -14,7 +14,7 @@ const isValidUrl = (url) => {
 
 const shortenUrl = async (req, res, next) => {
   try {
-    const { url } = req.body;
+    const { url, customAlias } = req.body;
 
     if (!url) {
       return res.status(400).json({ message: "URL is required" });
@@ -24,12 +24,23 @@ const shortenUrl = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid URL format" });
     }
 
-    const newUrl = await createShortUrl(url);
+    // 🔹 Validate custom alias (optional)
+    if (customAlias && !/^[a-zA-Z0-9-]+$/.test(customAlias)) {
+      return res
+        .status(400)
+        .json({ message: "Custom alias can only contain letters, numbers and hyphen" });
+    }
+
+    const newUrl = await createShortUrl(url, customAlias);
 
     res.status(201).json({
       shortUrl: `${process.env.BASE_URL}/${newUrl.short_id}`,
     });
   } catch (error) {
+    if (error.message === "Custom URL already taken") {
+      return res.status(400).json({ message: error.message });
+    }
+
     next(error);
   }
 };
