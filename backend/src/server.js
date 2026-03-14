@@ -1,9 +1,8 @@
-import dotenv from "dotenv";
-dotenv.config();
+require("dotenv").config();
 
-import app from "./app.js";
-import pool from "./config/db.js";
-import { connectRedis } from "./config/redis.js";
+const app = require("./app");
+const pool = require("./config/db");
+const { connectRedis } = require("./config/redis");
 
 const PORT = process.env.PORT || 5000;
 
