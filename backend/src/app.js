@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+
 const urlRoutes = require("./routes/url.routes");
+const statsRoutes = require("./routes/stats.routes");
+
 const errorHandler = require("./middlewares/error.middleware");
 
 const app = express();
@@ -33,6 +36,8 @@ app.use(globalLimiter);
 app.use("/shorten", createLimiter);
 
 app.use("/", urlRoutes);
+
+app.use("/api", statsRoutes);
 
 app.use(errorHandler);
 
