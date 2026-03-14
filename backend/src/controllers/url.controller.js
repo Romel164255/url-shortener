@@ -14,7 +14,7 @@ const isValidUrl = (url) => {
 
 const shortenUrl = async (req, res, next) => {
   try {
-    const { url, customAlias } = req.body;
+    const { url, customAlias, expiresIn } = req.body;
 
     if (!url) {
       return res.status(400).json({ message: "URL is required" });
@@ -31,10 +31,18 @@ const shortenUrl = async (req, res, next) => {
         .json({ message: "Custom alias can only contain letters, numbers and hyphen" });
     }
 
-    const newUrl = await createShortUrl(url, customAlias);
+    // 🔹 Validate expiresIn (optional, must be a positive integer in seconds)
+    if (expiresIn !== undefined && (!Number.isInteger(expiresIn) || expiresIn <= 0)) {
+      return res
+        .status(400)
+        .json({ message: "expiresIn must be a positive integer (seconds)" });
+    }
+
+    const newUrl = await createShortUrl(url, customAlias, expiresIn ?? null);
 
     res.status(201).json({
       shortUrl: `${process.env.BASE_URL}/${newUrl.short_id}`,
+      expiresAt: newUrl.expires_at ?? null,
     });
   } catch (error) {
     if (error.message === "Custom URL already taken") {
@@ -53,6 +61,11 @@ const redirectUrl = async (req, res, next) => {
 
     if (!originalUrl) {
       return res.status(404).json({ message: "URL not found" });
+    }
+
+    // 🔹 Handle expired links with 410 Gone
+    if (originalUrl === "EXPIRED") {
+      return res.status(410).json({ message: "This link has expired" });
     }
 
     res.redirect(originalUrl);
