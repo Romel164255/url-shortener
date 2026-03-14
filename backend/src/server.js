@@ -1,7 +1,9 @@
-require("dotenv").config();
-const app = require("./app");
-const pool = require("./config/db");
-const { connectRedis } = require("./config/redis");
+import dotenv from "dotenv";
+dotenv.config();
+
+import app from "./app.js";
+import pool from "./config/db.js";
+import { connectRedis } from "./config/redis.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -10,11 +12,12 @@ async function startServer() {
     await pool.query("SELECT NOW()");
     console.log("✅ PostgreSQL connected");
 
-    connectRedis(); // prevent redis to block and crash app->>await connectRedis();
+    await connectRedis(); // connect redis properly
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
+
   } catch (error) {
     console.error("❌ Startup failed:", error);
     process.exit(1);
