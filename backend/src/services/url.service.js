@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const { pool } = require("../config/db");
 const generateShortId = require("../utils/generateShortId");
 const { redisClient } = require("../config/redis");
 

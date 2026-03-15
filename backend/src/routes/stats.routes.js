@@ -10,12 +10,12 @@ router.get("/stats", async (req, res) => {
     const urls = await pool.query("SELECT COUNT(*) FROM urls");
 
     const clicks = await pool.query(
-      "SELECT SUM(click_count) FROM urls"
+      "SELECT COALESCE(SUM(clicks), 0) AS total_clicks FROM urls"
     );
 
     res.json({
       totalUrls: urls.rows[0].count,
-      totalClicks: clicks.rows[0].sum || 0
+      totalClicks: clicks.rows[0].total_clicks
     });
 
   } catch (err) {
