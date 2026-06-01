@@ -1,8 +1,5 @@
 const express = require("express");
-const {
-  shortenUrl,
-  redirectUrl,
-} = require("../controllers/url.controller");
+const { shortenUrl, redirectUrl } = require("../controllers/url.controller");
 
 const router = express.Router();
 

@@ -1,7 +1,4 @@
-const {
-  createShortUrl,
-  getOriginalUrl,
-} = require("../services/url.service");
+const { createShortUrl, getOriginalUrl } = require("../services/url.service");
 
 const isValidUrl = (url) => {
   try {
@@ -26,13 +23,16 @@ const shortenUrl = async (req, res, next) => {
 
     // 🔹 Validate custom alias (optional)
     if (customAlias && !/^[a-zA-Z0-9-]+$/.test(customAlias)) {
-      return res
-        .status(400)
-        .json({ message: "Custom alias can only contain letters, numbers and hyphen" });
+      return res.status(400).json({
+        message: "Custom alias can only contain letters, numbers and hyphen",
+      });
     }
 
     // 🔹 Validate expiresIn (optional, must be a positive integer in seconds)
-    if (expiresIn !== undefined && (!Number.isInteger(expiresIn) || expiresIn <= 0)) {
+    if (
+      expiresIn !== undefined &&
+      (!Number.isInteger(expiresIn) || expiresIn <= 0)
+    ) {
       return res
         .status(400)
         .json({ message: "expiresIn must be a positive integer (seconds)" });

@@ -8,7 +8,7 @@ const createShortUrl = async (originalUrl, customAlias, expiresIn = null) => {
   // 🔹 Check if shortId already exists
   const existingShort = await pool.query(
     `SELECT * FROM urls WHERE short_id = $1`,
-    [shortId]
+    [shortId],
   );
 
   if (existingShort.rows.length > 0) {
@@ -16,15 +16,13 @@ const createShortUrl = async (originalUrl, customAlias, expiresIn = null) => {
   }
 
   // 🔹 Calculate expiry timestamp if provided (expiresIn is in seconds)
-  const expiresAt = expiresIn
-    ? new Date(Date.now() + expiresIn * 1000)
-    : null;
+  const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000) : null;
 
   const { rows } = await pool.query(
     `INSERT INTO urls (original_url, short_id, expires_at)
      VALUES ($1, $2, $3)
      RETURNING *`,
-    [originalUrl, shortId, expiresAt]
+    [originalUrl, shortId, expiresAt],
   );
 
   return rows[0];
@@ -42,15 +40,14 @@ const getOriginalUrl = async (shortId) => {
   if (cached) {
     await pool.query(
       `UPDATE urls SET clicks = clicks + 1 WHERE short_id = $1`,
-      [shortId]
+      [shortId],
     );
     return cached;
   }
 
-  const { rows } = await pool.query(
-    `SELECT * FROM urls WHERE short_id = $1`,
-    [shortId]
-  );
+  const { rows } = await pool.query(`SELECT * FROM urls WHERE short_id = $1`, [
+    shortId,
+  ]);
 
   if (rows.length === 0) return null;
 
@@ -73,10 +70,9 @@ const getOriginalUrl = async (shortId) => {
     }
   } catch {}
 
-  await pool.query(
-    `UPDATE urls SET clicks = clicks + 1 WHERE short_id = $1`,
-    [shortId]
-  );
+  await pool.query(`UPDATE urls SET clicks = clicks + 1 WHERE short_id = $1`, [
+    shortId,
+  ]);
 
   return originalUrl;
 };
